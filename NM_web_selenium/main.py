@@ -14,7 +14,7 @@ class main:
         func = func()
         eoes = EOES()
         smallfunctionsofnm = SmallFuncionsOfNM()
-        # eoes.DetailedListStatistics()
+        eoes.DetailedListStatistics()
         # eoes.Customizable_Statistics()
         # eoes.System_BS_Organization_Statistics()
         # eoes.KPI_Statistic()
