@@ -2064,7 +2064,7 @@ class EOES:
         excel_path = 'C:\StatisticsCompare\Format_LOG.xls'
         d = pd.read_excel(excel_path, sheet_name='format_check_data', encoding='gbk')
         call_count[call_type[0]] = d[(d[u'Result']=='Pass')&(d[u'SpecialType'] == '加密呼叫')]
-
+        print 1
 
 
         outfile = d[(d[u'Result']=='Pass')&(d[u'SpecialType'] == '加密呼叫')]#筛选
