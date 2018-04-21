@@ -19,6 +19,7 @@ import xlwt
 import xlrd
 import re
 import sys
+import os
 reload(sys)
 sys.setdefaultencoding('utf8')
 class EOES:
@@ -2056,19 +2057,47 @@ class EOES:
 
 
     def System_Statistic(self):
-        call_count,data_count = {}
+        call_count = {}
         call_type = ['Group Call,','Individual Call,','Inter-BS,','Intra-BS,','Intra-system,','Inter-system,','Normal Call','GPS Group Call','Include Call','Patch Group Call','PSTN Call','Reserved Call','Broadcast Call','Full-duplex Call','Emergency Call','Encrypted Call','Ambience Listening']
         data_type = ['Group Call','Individual Call','Individual Short Message Call','Individual Packet Data Call','Individual Status Message Call','Group Short Message Call','Group Packet Data Call','Group Status Message Call']
-        self.Func.csv_to_xlsx_pd('C:\StatisticsCompare\TCL_LOG.csv','C:\StatisticsCompare\TCL_LOG.xls')
-        self.Func.log2format('C:\StatisticsCompare\TCL_LOG.xls','C:\StatisticsCompare\Format_LOG.xls')
-        excel_path = 'C:\StatisticsCompare\Format_LOG.xls'
-        d = pd.read_excel(excel_path, sheet_name='format_check_data', encoding='gbk')
-        call_count[call_type[0]] = d[(d[u'Result']=='Pass')&(d[u'SpecialType'] == '加密呼叫')]
-        print 1
+        # self.Func.csv_to_xlsx_pd('E:\NM_web_selenium_all\StatisticsCompare\TCL_LOG.csv','E:\NM_web_selenium_all\StatisticsCompare\TCL_LOG.xls')
+        # self.Func.log2format('E:\NM_web_selenium_all\StatisticsCompare\TCL_LOG.xls','E:\NM_web_selenium_all\StatisticsCompare\Format_LOG.xls')
+        excel_path = 'E:\NM_web_selenium_all\StatisticsCompare\Format_LOG.xls'
+        d = pd.read_excel(excel_path, sheet_name='format_check_data', encoding='gbk',keep_default_na=False)
+        #
+        #
+        # outfile = d[(d[u'Result']=='Pass')&(d[u'SpecialType'] == '加密呼叫')]#筛选
+        data_LogData={}
+        data_count = {}
+        #数据组呼次数：Result为'pass'，ServiceType为'数据'，CallType为'短消息组呼'或'状态消息组呼'或'长短消息组呼'
+        data_LogData[data_type[0]] =d[(d[u'Result']=='Pass')&(d[u'ServiceType']=='数据')&((d[u'CallType']=='短消息组呼')|(d[u'CallType']=='状态消息组呼')|(d[u'CallType']=='长短消息组呼'))]
+        #数据单呼次数：Result为'pass'，ServiceType为'数据'，CallType为'短消息单呼'或'状态消息单呼'或'长短消息单呼'
+        data_LogData[data_type[1]] =d[(d[u'Result']=='Pass')&(d[u'ServiceType']=='数据')&((d[u'CallType']=='短消息单呼')|(d[u'CallType']=='状态消息单呼')|(d[u'CallType']=='长短消息单呼'))]
+        #短信单呼次数：Result为'pass'，ServiceType为'数据'，CallType为'短消息单呼'
+        data_LogData[data_type[2]] =d[(d[u'Result']=='Pass')&(d[u'ServiceType']=='数据')&(d[u'CallType']=='短消息单呼')]
+        #长短信单呼次数：Result为'pass'，ServiceType为'数据'，CallType为'长短消息单呼'
+        data_LogData[data_type[3]] =d[(d[u'Result']=='Pass')&(d[u'ServiceType']=='数据')&(d[u'CallType']=='长短消息单呼')]
+        #状态消息单呼次数：Result为'pass'，ServiceType为'数据'，CallType为'长短消息单呼'
+        data_LogData[data_type[4]] =d[(d[u'Result']=='Pass')&(d[u'ServiceType']=='数据')&(d[u'CallType']=='状态消息单呼')]
+        #短信组呼次数：Result为'pass'，ServiceType为'数据'，CallType为'短消息单呼'
+        data_LogData[data_type[5]] =d[(d[u'Result']=='Pass')&(d[u'ServiceType']=='数据')&(d[u'CallType']=='短消息组呼')]
+        #长短信组呼次数：Result为'pass'，ServiceType为'数据'，CallType为'长短消息单呼'
+        data_LogData[data_type[6]] =d[(d[u'Result']=='Pass')&(d[u'ServiceType']=='数据')&(d[u'CallType']=='长短消息组呼')]
+        #状态消息组呼次数：Result为'pass'，ServiceType为'数据'，CallType为'长短消息单呼'
+        data_LogData[data_type[7]] =d[(d[u'Result']=='Pass')&(d[u'ServiceType']=='数据')&(d[u'CallType']=='状态消息组呼')]
+        #各种data——type呼叫次数
+        for i in range(len(data_LogData)):
+            data_count[data_type[i]] = len(data_LogData[data_type[i]])
+        #数据单呼呼叫次数:
+        di = data_LogData[data_type[1]]  # 传入筛选出来的单呼数据，返回每个msi的次数
+        end_result_in = self.Func.get_indi_count(di,type = 'msi')
+        #数据组呼呼叫次数
+        di = data_LogData[data_type[0]]  # 传入筛选出来的单呼数据，返回每个msi的次数
+        end_result_gr = self.Func.get_indi_count(di, type='gsi')
+        #
+        #     print di[(di[u'CallingAddr']==u'3131001')]
+            # | (di[u'CalledAddr'] == unicode(str(msi_num_calling)))
 
 
-        outfile = d[(d[u'Result']=='Pass')&(d[u'SpecialType'] == '加密呼叫')]#筛选
-
-
-
+        # print data_LogData[data_type[1]][u'CallingAddr'].drop_duplicates()
 

@@ -19,6 +19,7 @@ import calendar
 import requests
 import os
 import sys
+import pandas as pd
 reload(sys)
 sys.setdefaultencoding('utf8')
 
@@ -318,7 +319,7 @@ class func:
     def log2format(self,log_name,format_log_name):
         # 初始化表头
         header_list = ['Number', 'Time', 'TimeStap', 'ServiceType', 'CallType', 'CrossStation', 'CrossSystem',
-                       'ExpectResult', 'CallingAddr', 'CallerAddr', 'ChannelOne', 'ChannelTwo', 'Result', 'Remark',
+                       'ExpectResult', 'CallingAddr', 'CalledAddr', 'ChannelOne', 'ChannelTwo', 'Result', 'Remark',
                        'SpecialType', 'DecideData']
         # 新建excel
         format_book = xlwt.Workbook(encoding='utf-8')
@@ -348,7 +349,7 @@ class func:
             otherdata = lastdata.split('-')
             if dict_data['ServiceType'] == '语音':
                 # 按列写入新表格
-                dict_data['CallType'], dict_data['CrossStation'], dict_data['CallingAddr'], dict_data['CallerAddr'], \
+                dict_data['CallType'], dict_data['CrossStation'], dict_data['CallingAddr'], dict_data['CalledAddr'], \
                 dict_data['ExpectResult'] = otherdata[0], otherdata[1], otherdata[2], otherdata[4], otherdata[6]
                 dict_data['Result'] = table.cell(row, 4).value
                 if len(otherdata) == 8:
@@ -369,11 +370,76 @@ class func:
                     index_num = header_list.index(key)
                     format_sheet.write(row, index_num, dict_data[key])
             else:
-                dict_data['CallType'], dict_data['CallingAddr'], dict_data['CallerAddr'], dict_data['ExpectResult'] = \
-                otherdata[0], otherdata[1], otherdata[3], otherdata[5]
-                dict_data['Result'] = table.cell(row, 5).value
+                dict_data['Result'] = table.cell(row, 4).value
+                # dict_data['DecideData']=otherdata[]
+                dict_data['CallType'], dict_data['CallingAddr'], dict_data['CalledAddr'], dict_data['ExpectResult'] =otherdata[0], otherdata[1], otherdata[3], otherdata[5]
+                for key in dict_data:
+                    index_num = header_list.index(key)
+                    format_sheet.write(row, index_num, dict_data[key])
         format_book.save(format_log_name)
 
+    def get_calling_addr(self,Log_data):
+        msi_calling = Log_data.drop_duplicates(u'CallingAddr').loc[:,u'CallingAddr'].values
+        for i in range(len(msi_calling)):
+            msi_calling[i] = int(msi_calling[i])
+        print msi_calling
+        return msi_calling
+    def get_called_addr(self,Log_data):
+        called = Log_data.drop_duplicates(u'CalledAddr').loc[:, u'CalledAddr'].values
+        for i in range(len(called)):
+            called[i] = int(called[i])
+        print called
+        return called
+
+        # msi_called = Log_data.drop_duplicates(u'CalledAddr').loc[:,u'CalledAddr'].values
+        # for i in range(len(msi_called)):
+        #     msi_called[i] = int(msi_called[i])
+        # for i in range(len(msi_calling)):
+        #     msi_called[i] = int(msi_calling[i])
+        # individual_msi = msi_called+msi_calling
+        # print Log_data.drop_duplicates(u'CallingAddr').loc[:,u'CallingAddr'].values + Log_data.drop_duplicates(u'CalledAddr').loc[:,u'CalledAddr'].values
 
 
+        # return individual_msi
+    def get_group_addr(self,):
+        pass
+            #
+            #
+            # individual_msi.append(data_LogData[data_type[1]][u'CallingAddr'].drop_duplicates())
+            #
+            # individual_msi.append(data_LogData[data_type[1]][u'CalledAddr'].drop_duplicates())
 
+    def charToUnic(self,ch):
+        tmp_ch = hex(ord(ch))[2:]
+        return "0" * (4 - len(tmp_ch)) + tmp_ch
+
+
+    def get_indi_count(self,di,type):
+        def dict_add(x, y):
+            for k, v in y.items():
+                if k in x.keys():
+                    x[k] += v
+                else:
+                    x[k] = v
+            return x
+        msi_num_calling = di.drop_duplicates(u'CallingAddr').loc[:, u'CallingAddr'].values
+        for i in range(len(msi_num_calling)):
+            msi_num_calling[i] = int(msi_num_calling[i])
+        msi_num_called = di.drop_duplicates(u'CalledAddr').loc[:, u'CalledAddr'].values
+        for i in range(len(msi_num_called)):
+            msi_num_called[i] = int(msi_num_called[i])
+        # 取每个主叫号码次数
+        data_in_ing_count={}
+        data_in_ed_count={}
+        for i in range(len(msi_num_calling)):
+            data = di[(di[u'CallingAddr'] == unicode(str(msi_num_calling[i])))]
+            data_in_ing_count[msi_num_calling[i]] = len(data)
+        # 取每个被叫号码次数
+        for i in range(len(msi_num_called)):
+            data = di[(di[u'CalledAddr'] == unicode(str(msi_num_called[i])))]
+            data_in_ed_count[msi_num_called[i]] = len(data)
+        if type =='msi':
+            end = dict_add(data_in_ing_count, data_in_ed_count)
+        else:
+            end = data_in_ed_count
+        return end
